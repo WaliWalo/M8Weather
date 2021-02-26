@@ -6,7 +6,6 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
       lowercase: true,
-      unique: true,
       required: "Email address is required",
       match: [
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
@@ -15,14 +14,17 @@ const UserSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
-      minlength: 8,
     },
-    role: {
-      type: String,
-      enum: ["admin", "user"],
-      required: true,
-    },
+    firstName: { type: String },
+    lastName: { type: String },
+    favourite: [
+      {
+        name: { type: String, required: true },
+        lat: { type: Number, required: true },
+        long: { type: Number, required: true },
+      },
+    ],
+    googleId: String,
   },
   {
     timestamps: true,
@@ -31,11 +33,10 @@ const UserSchema = new Schema(
 
 UserSchema.statics.findByCredentials = async function (email, password) {
   const user = await this.findOne({ email });
-
   if (user) {
     const isMatch = await bcrypt.compare(password, user.password);
     if (isMatch) return user;
-    else return null;
+    else return { status: "error", error: "Username/password incorrect" };
   } else return null;
 };
 
